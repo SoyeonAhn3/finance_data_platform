@@ -148,7 +148,8 @@ finance_data_platform/
 │   ├── validators/              # 데이터 품질 검증
 │   │   └── quality_checker.py
 │   ├── loaders/                 # BigQuery 데이터 적재
-│   │   └── bigquery_loader.py
+│   │   ├── bigquery_loader.py
+│   │   └── operations_logger.py
 │   ├── transformers/            # Star Schema 변환
 │   │   └── star_schema.py
 │   ├── utils/                   # 설정 & 로깅 유틸리티
@@ -181,7 +182,7 @@ finance_data_platform/
 |---|---|---|
 | Phase 1 — 프로젝트 세팅 | ✅ 완료 | 환경 구성, BigQuery 스키마 초기화, 유틸리티 모듈 |
 | Phase 2 — 데이터 수집 | ✅ 완료 | 유니버스(Wikipedia) + 주가(Alpha Vantage) + FRED 수집기 |
-| Phase 3 — 데이터 적재 & 검증 | 🔲 미시작 | BigQuery 로더 + 품질 검증기 |
+| Phase 3 — 데이터 적재 & 검증 | ✅ 완료 | BigQuery 로더 + 품질 검증기 + 운영 로그 |
 | Phase 4 — Star Schema & Mart | 🔲 미시작 | Fact/Dim 테이블 + 3개 Mart View |
 | Phase 5 — Power BI 대시보드 | 🔲 미시작 | KPI 차트 + 필터 |
 | Phase 6 — 스케줄링 | 🔲 미시작 | GitHub Actions cron 파이프라인 자동 실행 |

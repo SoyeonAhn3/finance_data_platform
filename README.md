@@ -162,7 +162,8 @@ finance_data_platform/
 │   ├── validators/              # Data quality checks
 │   │   └── quality_checker.py
 │   ├── loaders/                 # BigQuery data loading
-│   │   └── bigquery_loader.py
+│   │   ├── bigquery_loader.py
+│   │   └── operations_logger.py
 │   ├── transformers/            # Star Schema transformation
 │   │   └── star_schema.py
 │   ├── utils/                   # Config & logging utilities
@@ -195,7 +196,7 @@ finance_data_platform/
 |---|---|---|
 | Phase 1 — Project Setup | ✅ Completed | Environment config, BigQuery schema init, utility modules |
 | Phase 2 — Data Collection | ✅ Completed | Universe (Wikipedia) + price (Alpha Vantage) + FRED collectors |
-| Phase 3 — Data Loading & Validation | 🔲 Not Started | BigQuery loader + quality checker |
+| Phase 3 — Data Loading & Validation | ✅ Completed | BigQuery loader + quality checker + ops logs |
 | Phase 4 — Star Schema & Mart | 🔲 Not Started | Fact/Dim tables + 3 Mart Views |
 | Phase 5 — Power BI Dashboard | 🔲 Not Started | KPI charts with filters |
 
