@@ -8,7 +8,7 @@
 
 ## 개요
 
-데이터 엔지니어링 학습을 목적으로 금융 분석 파이프라인을 처음부터 구축하는 프로젝트. 먼저 ETF 보유종목(IVV/QQQ)에서 분석 대상 유니버스(S&P 500 + Nasdaq-100 구성종목)를 매 실행 수집한 뒤, 무료 API에서 미국 주가와 경제지표를 수집하고, BigQuery에 적재하여 Star Schema로 변환한 뒤, Power BI 대시보드로 시각화한다. v2에서는 Text-to-SQL AI를 통한 자연어 질의 기능을 추가할 예정이다.
+데이터 엔지니어링 학습을 목적으로 금융 분석 파이프라인을 처음부터 구축하는 프로젝트. 먼저 분석 대상 유니버스(S&P 500 + Nasdaq-100 구성종목)를 매 실행 수집한 뒤, 무료 소스에서 미국 주가와 경제지표를 수집하고, BigQuery에 적재하여 Star Schema로 변환한 뒤, Power BI 대시보드로 시각화한다. v2에서는 Text-to-SQL AI를 통한 자연어 질의 기능을 추가할 예정이다.
 
 ---
 
@@ -29,11 +29,11 @@
 ## 동작 흐름
 
 ```
-[ETF 보유종목 IVV / QQQ]
+[Wikipedia 구성종목 표]
         ↓
   Universe Collector       ← S&P500 + Nasdaq-100 구성종목 수집 (매 실행)
         ↓
-[yfinance / FRED API]
+[Alpha Vantage / FRED API]
         ↓
   Python Collectors        ← OHLCV + 경제지표 수집 (대상 = 유니버스)
         ↓
@@ -52,7 +52,7 @@
 
 ## 유니버스 (분석 대상)
 
-분석 대상은 **S&P 500 + Nasdaq-100** 구성종목이다. 종목을 코드에 손으로 나열하지 않고, **매 실행마다 ETF 보유종목에서 구성종목 목록을 수집**한다.
+분석 대상은 **S&P 500 + Nasdaq-100** 구성종목이다. 종목을 코드에 손으로 나열하지 않고, **매 실행마다 구성종목 목록을 수집**한다 (소스는 교체 가능 — 기본 `wikipedia`, `etf_holdings` 옵션).
 
 | 지수 | ETF | 운용사 | 근거 |
 |---|---|---|---|
@@ -73,8 +73,8 @@
 | Technology | Role | Why |
 |---|---|---|
 | Python 3.x | 데이터 수집 & 오케스트레이션 | 금융 데이터 라이브러리 풍부 (yfinance, fredapi), 학습 접근성 |
-| ETF 보유종목 (IVV/QQQ) | 지수 구성종목 (S&P500 + Nasdaq-100) | 운용사 공시, 무료·키 불필요 |
-| yfinance | 미국 주식 OHLCV 데이터 | 무료, API 키 불필요, 비공식이지만 널리 사용 |
+| Wikipedia / ETF 보유종목 | 지수 구성종목 (S&P500 + Nasdaq-100) | 교체 가능 — Wikipedia(기본, 무료·GICS 섹터) 또는 ETF 보유종목; 편출입·상폐 자동 반영 |
+| Alpha Vantage / yfinance | 미국 주식 OHLCV 데이터 | 교체 가능 — Alpha Vantage(기본, 무료 키) 또는 yfinance |
 | FRED API | 경제지표 (금리, CPI) | 미국 연방준비제도 공식 데이터, 무료 API 키 |
 | Google BigQuery | 서버리스 클라우드 DW | 영구 무료티어, 서버리스, Star Schema 네이티브 |
 | Star Schema | 데이터 모델링 패턴 | 분석 최적화, BI 워크로드 표준 패턴 |
@@ -92,6 +92,7 @@
 - Power BI Desktop
 - GCP 프로젝트 + BigQuery 활성화 + 서비스계정 키
 - FRED API 키 ([fred.stlouisfed.org](https://fred.stlouisfed.org))
+- Alpha Vantage API 키 ([alphavantage.co](https://www.alphavantage.co/support/#api-key))
 
 ### 설치
 
@@ -115,6 +116,7 @@ BQ_DATASET=finance_db
 BQ_LOCATION=US
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service_account.json
 FRED_API_KEY=your_fred_key
+ALPHAVANTAGE_API_KEY=your_alphavantage_key
 ```
 
 ### BigQuery 설정
@@ -141,7 +143,7 @@ finance_data_platform/
 ├── src/
 │   ├── collectors/              # API 데이터 수집 모듈
 │   │   ├── universe_collector.py
-│   │   ├── yfinance_collector.py
+│   │   ├── price_collector.py
 │   │   └── fred_collector.py
 │   ├── validators/              # 데이터 품질 검증
 │   │   └── quality_checker.py
@@ -178,7 +180,7 @@ finance_data_platform/
 | Phase | Status | Deliverable |
 |---|---|---|
 | Phase 1 — 프로젝트 세팅 | ✅ 완료 | 환경 구성, BigQuery 스키마 초기화, 유틸리티 모듈 |
-| Phase 2 — 데이터 수집 | 🔲 미시작 | yfinance + FRED API 수집 모듈 |
+| Phase 2 — 데이터 수집 | ✅ 완료 | 유니버스(Wikipedia) + 주가(Alpha Vantage) + FRED 수집기 |
 | Phase 3 — 데이터 적재 & 검증 | 🔲 미시작 | BigQuery 로더 + 품질 검증기 |
 | Phase 4 — Star Schema & Mart | 🔲 미시작 | Fact/Dim 테이블 + 3개 Mart View |
 | Phase 5 — Power BI 대시보드 | 🔲 미시작 | KPI 차트 + 필터 |

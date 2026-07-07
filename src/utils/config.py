@@ -31,19 +31,20 @@ BQ_DATASET = os.environ.get("BQ_DATASET", "finance_db")
 BQ_LOCATION = os.environ.get("BQ_LOCATION", "US")
 GOOGLE_APPLICATION_CREDENTIALS = os.environ.get("GOOGLE_APPLICATION_CREDENTIALS")
 FRED_API_KEY = os.environ.get("FRED_API_KEY")
+ALPHAVANTAGE_API_KEY = os.environ.get("ALPHAVANTAGE_API_KEY")
 LOG_LEVEL = os.environ.get("LOG_LEVEL", "INFO")
-
-# 파이프라인 실행에 반드시 필요한 항목
-_REQUIRED = {
-    "GCP_PROJECT_ID": GCP_PROJECT_ID,
-    "GOOGLE_APPLICATION_CREDENTIALS": GOOGLE_APPLICATION_CREDENTIALS,
-    "FRED_API_KEY": FRED_API_KEY,
-}
-
 
 def validate() -> None:
     """필수 환경변수가 모두 있는지 확인. 없으면 한 번에 모아 에러."""
-    missing = [name for name, value in _REQUIRED.items() if not value]
+    required = {
+        "GCP_PROJECT_ID": GCP_PROJECT_ID,
+        "GOOGLE_APPLICATION_CREDENTIALS": GOOGLE_APPLICATION_CREDENTIALS,
+        "FRED_API_KEY": FRED_API_KEY,
+    }
+    # 주가 소스가 alphavantage 이면 키 필요 (yfinance 는 키 불필요)
+    if PRICE_SOURCE == "alphavantage":
+        required["ALPHAVANTAGE_API_KEY"] = ALPHAVANTAGE_API_KEY
+    missing = [name for name, value in required.items() if not value]
     if missing:
         raise RuntimeError(
             "필수 환경변수가 비어 있습니다: "
@@ -66,3 +67,5 @@ UNIVERSE = _symbols.get("universe", {})       # 유니버스 소스 (ETF)
 INDICATORS = _symbols.get("indicators", [])   # FRED 지표 목록 (dim_indicator seed)
 _settings = _symbols.get("settings", {})
 DATE_RANGE_START = _settings.get("date_range", {}).get("start", "2020-01-01")
+PRICE_SOURCE = _settings.get("price_source", "alphavantage")   # alphavantage | yfinance
+MAX_SYMBOLS = int(_settings.get("max_symbols", 0) or 0)         # 0 = 무제한

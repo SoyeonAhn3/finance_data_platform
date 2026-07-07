@@ -6,10 +6,12 @@
 # ────────────────────────────────────────────────
 
 universe:
-  # 분석 대상 지수. source=etf_holdings → 운용사 공시 보유종목 CSV에서 수집.
-  sp500:     { enabled: true, source: etf_holdings, etf: IVV }   # S&P 500  (BlackRock)
-  nasdaq100: { enabled: true, source: etf_holdings, etf: QQQ }   # Nasdaq-100 (Invesco)
-  include_extra: []   # 지수에 없지만 강제로 넣을 티커 (예: ["BRK.B"])
+  # 분석 대상 지수. source 종류:
+  #   wikipedia    → Wikipedia 구성종목 표 (기본, 무료·키불필요, ticker+회사명+섹터)
+  #   etf_holdings → 운용사 공시 CSV(IVV/QQQ, 비중 포함). 실패 시 wikipedia 로 자동 폴백.
+  sp500:     { enabled: true, source: wikipedia, etf: IVV }   # S&P 500  (BlackRock)
+  nasdaq100: { enabled: true, source: wikipedia, etf: QQQ }   # Nasdaq-100 (Invesco)
+  include_extra: []   # 지수에 없지만 강제로 넣을 티커 (예: ["BRK-B"])
   exclude:       []   # 강제 제외 티커 (탈출구)
 
 indicators:
@@ -19,4 +21,6 @@ indicators:
 
 settings:
   date_range:
-    start: "2020-01-01"   # 이 날짜부터 수집 (종료일은 오늘까지 자동)
+    start: "2020-01-01"        # 이 날짜부터 수집 (종료일은 오늘까지 자동)
+  price_source: alphavantage   # 주가 소스: alphavantage(무료 키 필요) | yfinance(전체·무제한, 키 불필요)
+  max_symbols: 20              # 수집 종목 수 상한 (Alpha Vantage 무료 25회/일 대비). 0=무제한

@@ -29,9 +29,9 @@ A learning-oriented data engineering project that builds a complete financial an
 ## How It Works
 
 ```
-  Universe Fetch           ← ETF holdings (IVV/QQQ) → S&P 500 + Nasdaq-100 constituents
+  Universe Fetch           ← Wikipedia (default) → S&P 500 + Nasdaq-100 constituents
         ↓
-[yfinance / FRED API]
+[Alpha Vantage / FRED API]
         ↓
   Python Collectors        ← Collect OHLCV + economic indicators
         ↓
@@ -50,14 +50,14 @@ A learning-oriented data engineering project that builds a complete financial an
 
 ## Data Universe
 
-The analysis universe is the **S&P 500 + Nasdaq-100** constituents. Rather than hand-listing tickers, the constituent list is **fetched from ETF holdings on every run**, so index additions, removals, and delistings are reflected automatically.
+The analysis universe is the **S&P 500 + Nasdaq-100** constituents. Rather than hand-listing tickers, the constituent list is **fetched on every run** — the source is pluggable (`wikipedia` by default, `etf_holdings` optional) — so index additions, removals, and delistings are reflected automatically.
 
 | Index | ETF | Provider | Source of truth |
 |---|---|---|---|
 | S&P 500 | IVV | BlackRock (iShares) | Fund manager's daily-published holdings |
 | Nasdaq-100 | QQQ | Invesco | Same |
 
-- **Fund holdings over Wikipedia** — authoritative, free, no API key required, GICS sector included.
+- **Constituent source (pluggable)** — Wikipedia by default (free, no API key, GICS sector included); ETF issuer holdings (`etf_holdings`, indices/ETFs in the table above) available as an option.
 - **Automatic add/drop & delisting** — every run re-fetches constituents, so a name that leaves an index falls out of `dim_symbol` (and therefore the fact tables) on the next run, while newly added names are included automatically — no manual ticker toggling.
 - **Cache fallback** — if a fetch fails, `raw_universe` keeps the last successful list (no truncate); index membership changes only quarterly, so a one-day-old cache is safe.
 - **Scale** — ~510–530 unique symbols across both indices (heavy overlap) → ~650K rows in `fact_daily_price` over five years, comfortably within the BigQuery free tier.
@@ -66,8 +66,8 @@ The analysis universe is the **S&P 500 + Nasdaq-100** constituents. Rather than 
 
 ```yaml
 universe:
-  sp500:     { enabled: true, source: etf_holdings, etf: IVV }
-  nasdaq100: { enabled: true, source: etf_holdings, etf: QQQ }
+  sp500:     { enabled: true, source: wikipedia, etf: IVV }
+  nasdaq100: { enabled: true, source: wikipedia, etf: QQQ }
   include_extra: []      # tickers to force-include (not in the index)
   exclude:       []      # tickers to force-exclude (escape hatch)
 
@@ -77,6 +77,8 @@ indicators:              # FRED indicators — hand-listed (few & stable) → di
 
 settings:
   date_range: { start: "2020-01-01" }
+  price_source: alphavantage   # alphavantage (default) | yfinance
+  max_symbols: 20              # cap on tickers per run (0 = no cap)
 ```
 
 ---
@@ -86,8 +88,8 @@ settings:
 | Technology | Role | Why |
 |---|---|---|
 | Python 3.x | Data collection & orchestration | Rich financial data libraries (yfinance, fredapi), accessible for learning |
-| ETF holdings (IVV/QQQ) | Index constituents (S&P 500 + Nasdaq-100) | Fund-manager-published daily holdings — authoritative, free, no API key; auto-reflects index add/drop & delistings |
-| yfinance | US stock OHLCV data | Free, no API key required, unofficial but widely used |
+| Wikipedia / ETF holdings | Index constituents (S&P 500 + Nasdaq-100) | Pluggable — Wikipedia (default, free, GICS sector) or ETF issuer holdings; auto-reflects index add/drop & delistings |
+| Alpha Vantage / yfinance | US stock OHLCV data | Pluggable — Alpha Vantage (default, free API key) or yfinance |
 | FRED API | Economic indicators (rates, CPI) | Official Federal Reserve data, free with API key |
 | Google BigQuery | Serverless cloud data warehouse | Industry standard, permanent free tier, native Star Schema support |
 | Star Schema | Data modeling pattern | Optimized for analytics, best practice for BI workloads |
@@ -105,6 +107,7 @@ settings:
 - Power BI Desktop
 - GCP project with BigQuery enabled + service account key
 - FRED API key ([fred.stlouisfed.org](https://fred.stlouisfed.org))
+- Alpha Vantage API key ([alphavantage.co](https://www.alphavantage.co/support/#api-key))
 
 ### Installation
 
@@ -128,6 +131,7 @@ BQ_DATASET=finance_db
 BQ_LOCATION=US
 GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account-key.json
 FRED_API_KEY=your_fred_key
+ALPHAVANTAGE_API_KEY=your_alphavantage_key
 ```
 
 ### BigQuery Setup
@@ -153,7 +157,7 @@ finance_data_platform/
 ├── src/
 │   ├── collectors/              # API data collection modules
 │   │   ├── universe_collector.py
-│   │   ├── yfinance_collector.py
+│   │   ├── price_collector.py
 │   │   └── fred_collector.py
 │   ├── validators/              # Data quality checks
 │   │   └── quality_checker.py
@@ -190,7 +194,7 @@ finance_data_platform/
 | Phase | Status | Deliverable |
 |---|---|---|
 | Phase 1 — Project Setup | ✅ Completed | Environment config, BigQuery schema init, utility modules |
-| Phase 2 — Data Collection | 🔲 Not Started | yfinance + FRED API collection modules |
+| Phase 2 — Data Collection | ✅ Completed | Universe (Wikipedia) + price (Alpha Vantage) + FRED collectors |
 | Phase 3 — Data Loading & Validation | 🔲 Not Started | BigQuery loader + quality checker |
 | Phase 4 — Star Schema & Mart | 🔲 Not Started | Fact/Dim tables + 3 Mart Views |
 | Phase 5 — Power BI Dashboard | 🔲 Not Started | KPI charts with filters |
