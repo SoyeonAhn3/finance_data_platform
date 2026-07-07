@@ -177,7 +177,7 @@ finance_data_platform/
 
 | Phase | Status | Deliverable |
 |---|---|---|
-| Phase 1 — 프로젝트 세팅 | 🔲 미시작 | 환경 구성, BigQuery 스키마 초기화, 유틸리티 모듈 |
+| Phase 1 — 프로젝트 세팅 | ✅ 완료 | 환경 구성, BigQuery 스키마 초기화, 유틸리티 모듈 |
 | Phase 2 — 데이터 수집 | 🔲 미시작 | yfinance + FRED API 수집 모듈 |
 | Phase 3 — 데이터 적재 & 검증 | 🔲 미시작 | BigQuery 로더 + 품질 검증기 |
 | Phase 4 — Star Schema & Mart | 🔲 미시작 | Fact/Dim 테이블 + 3개 Mart View |

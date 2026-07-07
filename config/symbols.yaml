@@ -1,0 +1,22 @@
+# ────────────────────────────────────────────────
+#  수집 설정 — "무엇을" 수집할지 정의한다 (코드 바깥 설정).
+#  개별 종목은 나열하지 않는다: 유니버스(S&P500+Nasdaq100) 구성종목은
+#  매 실행 ETF 보유종목(IVV/QQQ)에서 자동 수집한다.
+#  자세한 설계: docs/data_dictionary.md 8장
+# ────────────────────────────────────────────────
+
+universe:
+  # 분석 대상 지수. source=etf_holdings → 운용사 공시 보유종목 CSV에서 수집.
+  sp500:     { enabled: true, source: etf_holdings, etf: IVV }   # S&P 500  (BlackRock)
+  nasdaq100: { enabled: true, source: etf_holdings, etf: QQQ }   # Nasdaq-100 (Invesco)
+  include_extra: []   # 지수에 없지만 강제로 넣을 티커 (예: ["BRK.B"])
+  exclude:       []   # 강제 제외 티커 (탈출구)
+
+indicators:
+  # FRED 경제지표 — 손으로 관리하는 seed (적고 안정적). dim_indicator 의 소스.
+  - { code: FEDFUNDS, name: Federal Funds Rate,   unit: "%",   source: FRED }
+  - { code: CPIAUCSL, name: Consumer Price Index, unit: index, source: FRED }
+
+settings:
+  date_range:
+    start: "2020-01-01"   # 이 날짜부터 수집 (종료일은 오늘까지 자동)

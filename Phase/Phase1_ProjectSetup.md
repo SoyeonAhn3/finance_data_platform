@@ -1,8 +1,8 @@
-# Phase 1 — Project Setup `🔲 Not Started`
+# Phase 1 — Project Setup `✅ Completed`
 
 > Set up the development environment, BigQuery initialization, and project structure
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Completed
 **Prerequisites**: None
 
 ---
@@ -17,14 +17,14 @@ Establish the foundational project structure, configure environment variables, i
 
 | # | Module | Status | Type |
 |---|---|---|---|
-| 1 | Project directory structure | 🔲 | project-specific |
-| 2 | `.env` + `.gitignore` configuration | 🔲 | project-specific |
-| 3 | `requirements.txt` | 🔲 | project-specific |
-| 4 | `config/symbols.yaml` | 🔲 | project-specific |
-| 5 | `sql/setup.sql` (BigQuery schema) | 🔲 | project-specific |
-| 6 | `src/utils/config.py` | 🔲 | project-specific |
-| 7 | `src/utils/logger.py` | 🔲 | project-specific |
-| 8 | BigQuery connection test | 🔲 | project-specific |
+| 1 | Project directory structure | ✅ | project-specific |
+| 2 | `.env` + `.gitignore` configuration | ✅ | project-specific |
+| 3 | `requirements.txt` | ✅ | project-specific |
+| 4 | `config/symbols.yaml` | ✅ | project-specific |
+| 5 | `sql/setup.sql` (BigQuery schema) | ✅ | project-specific |
+| 6 | `src/utils/config.py` | ✅ | project-specific |
+| 7 | `src/utils/logger.py` | ✅ | project-specific |
+| 8 | BigQuery connection test | ✅ | project-specific |
 
 ---
 
@@ -157,15 +157,16 @@ Structured logging with timestamp, stage, status, record count (NFR-004).
 | 2026-07-06 | Revised for Snowflake → BigQuery migration |
 | 2026-07-06 | Reflected dynamic universe: added `raw_universe`, nullable raw columns, `config/symbols.yaml` universe-source structure, config.py universe load |
 | 2026-07-06 | Removed `sql/seed_dimensions.sql` — dims are populated from `raw_universe` / `config/symbols.yaml` / date generation |
+| 2026-07-07 | ✅ Phase 1 completed — all deliverables implemented (config.py, logger.py, bq_client.py, setup.sql, symbols.yaml, requirements.txt, main.py skeleton, tests/test_setup.py); BigQuery connection test passed; 10 tables created in `finance_db`; FRED key validated (FEDFUNDS fetch) |
 
 ---
 ---
 
-# Phase 1 — 프로젝트 세팅 `🔲 미시작`
+# Phase 1 — 프로젝트 세팅 `✅ 완료`
 
 > 개발 환경 구성, BigQuery 초기화, 프로젝트 구조 생성
 
-**상태**: 🔲 미시작
+**상태**: ✅ 완료
 **선행 조건**: 없음
 
 ---
@@ -180,14 +181,14 @@ Structured logging with timestamp, stage, status, record count (NFR-004).
 
 | # | 모듈 | 상태 | 타입 |
 |---|---|---|---|
-| 1 | 프로젝트 디렉토리 구조 | 🔲 | project-specific |
-| 2 | `.env` + `.gitignore` 설정 | 🔲 | project-specific |
-| 3 | `requirements.txt` | 🔲 | project-specific |
-| 4 | `config/symbols.yaml` | 🔲 | project-specific |
-| 5 | `sql/setup.sql` (BigQuery 스키마) | 🔲 | project-specific |
-| 6 | `src/utils/config.py` | 🔲 | project-specific |
-| 7 | `src/utils/logger.py` | 🔲 | project-specific |
-| 8 | BigQuery 연결 테스트 | 🔲 | project-specific |
+| 1 | 프로젝트 디렉토리 구조 | ✅ | project-specific |
+| 2 | `.env` + `.gitignore` 설정 | ✅ | project-specific |
+| 3 | `requirements.txt` | ✅ | project-specific |
+| 4 | `config/symbols.yaml` | ✅ | project-specific |
+| 5 | `sql/setup.sql` (BigQuery 스키마) | ✅ | project-specific |
+| 6 | `src/utils/config.py` | ✅ | project-specific |
+| 7 | `src/utils/logger.py` | ✅ | project-specific |
+| 8 | BigQuery 연결 테스트 | ✅ | project-specific |
 
 ---
 
@@ -320,3 +321,4 @@ settings:
 | 2026-07-06 | Snowflake → BigQuery 전환 반영 |
 | 2026-07-06 | 동적 유니버스 반영: `raw_universe` 추가, raw 컬럼 nullable화, `config/symbols.yaml` 유니버스 소스 구조, config.py 유니버스 로드 |
 | 2026-07-06 | `sql/seed_dimensions.sql` 제거 — dim은 `raw_universe`/`config/symbols.yaml`/날짜 생성으로 채워짐 |
+| 2026-07-07 | ✅ Phase 1 완료 — 산출물 전부 구현(config.py, logger.py, bq_client.py, setup.sql, symbols.yaml, requirements.txt, main.py 스켈레톤, tests/test_setup.py); BigQuery 연결 테스트 통과; `finance_db`에 테이블 10개 생성; FRED 키 유효성 확인(FEDFUNDS fetch) |

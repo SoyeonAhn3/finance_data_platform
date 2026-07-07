@@ -189,7 +189,7 @@ finance_data_platform/
 
 | Phase | Status | Deliverable |
 |---|---|---|
-| Phase 1 — Project Setup | 🔲 Not Started | Environment config, BigQuery schema init, utility modules |
+| Phase 1 — Project Setup | ✅ Completed | Environment config, BigQuery schema init, utility modules |
 | Phase 2 — Data Collection | 🔲 Not Started | yfinance + FRED API collection modules |
 | Phase 3 — Data Loading & Validation | 🔲 Not Started | BigQuery loader + quality checker |
 | Phase 4 — Star Schema & Mart | 🔲 Not Started | Fact/Dim tables + 3 Mart Views |

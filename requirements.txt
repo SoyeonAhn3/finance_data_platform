@@ -1,0 +1,23 @@
+# finance_data_platform — Python 의존성 목록
+# 설치:  pip install -r requirements.txt
+
+# ── 데이터 수집 ──────────────────────────────
+yfinance>=0.2.40          # 미국 주가 OHLCV (비공식, 무료)
+fredapi>=0.5.2            # FRED 경제지표 (무료 API 키 필요)
+requests>=2.32.0         # ETF 보유종목 CSV 다운로드 등 HTTP
+
+# ── 데이터 처리 ──────────────────────────────
+pandas>=2.2.0            # DataFrame 처리
+pyarrow>=16.0.0          # BigQuery load_table_from_dataframe 백엔드
+
+# ── BigQuery 적재 ────────────────────────────
+google-cloud-bigquery>=3.25.0   # BigQuery 클라이언트
+pandas-gbq>=0.23.0              # DataFrame ↔ BigQuery 보조
+db-dtypes>=1.2.0               # BigQuery 결과 → pandas 타입 변환
+
+# ── 설정 관리 ────────────────────────────────
+python-dotenv>=1.0.1     # .env 로드
+PyYAML>=6.0.2           # config/symbols.yaml 파싱
+
+# ── 테스트 (선택) ────────────────────────────
+pytest>=8.0.0

@@ -4,6 +4,13 @@
 *.env
 api.env
 .claude/api.env
+!.env.example
+
+# GCP 서비스계정 키 (절대 커밋 금지)
+credentials/*
+!credentials/README.md
+*service_account*.json
+*-key.json
 
 # 컨설팅 실행 데이터
 logs/
