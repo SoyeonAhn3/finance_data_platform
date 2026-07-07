@@ -1,15 +1,15 @@
-# Phase 2 — Data Collection `🔲 Not Started`
+# Phase 2 — Data Collection `✅ Completed`
 
-> Build data collection modules for yfinance (US stocks) and FRED API (economic indicators)
+> Build data collection modules for US stock prices and FRED API (economic indicators)
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Completed
 **Prerequisites**: Phase 1 completion (environment setup, BigQuery connection verified)
 
 ---
 
 ## Overview
 
-Implement Python modules to collect financial data from external APIs. **universe_collector runs first, collecting the S&P 500 + Nasdaq-100 constituent list from ETF holdings (IVV + QQQ) on every run, so index add/drop and delistings are reflected automatically.** This phase then covers yfinance for US stock OHLCV data and FRED API for economic indicators (interest rates, inflation, etc.). The pipeline logger records success/failure/record counts at each step.
+Implement Python modules to collect financial data from external APIs. **universe_collector runs first, collecting the S&P 500 + Nasdaq-100 constituent list on every run (source pluggable — Wikipedia by default), so index add/drop and delistings are reflected automatically.** This phase then covers Alpha Vantage for US stock OHLCV data (source pluggable, yfinance optional) and FRED API for economic indicators (interest rates, inflation, etc.). The pipeline logger records success/failure/record counts at each step.
 
 ---
 
@@ -17,14 +17,14 @@ Implement Python modules to collect financial data from external APIs. **univers
 
 | # | Module | Status | Type |
 |---|---|---|---|
-| 1 | `src/collectors/universe_collector.py` | 🔲 | project-specific |
-| 2 | `src/collectors/yfinance_collector.py` | 🔲 | project-specific |
-| 3 | `src/collectors/fred_collector.py` | 🔲 | project-specific |
-| 4 | `src/collectors/__init__.py` | 🔲 | project-specific |
-| 5 | Pipeline execution logging integration | 🔲 | project-specific |
-| 6 | universe collection test (ETF holdings → raw_universe) | 🔲 | project-specific |
-| 7 | yfinance sample data collection test | 🔲 | project-specific |
-| 8 | FRED API sample data collection test | 🔲 | project-specific |
+| 1 | `src/collectors/universe_collector.py` | ✅ | project-specific |
+| 2 | `src/collectors/price_collector.py` | ✅ | project-specific |
+| 3 | `src/collectors/fred_collector.py` | ✅ | project-specific |
+| 4 | `src/collectors/__init__.py` | ✅ | project-specific |
+| 5 | Pipeline execution logging integration | ✅ | project-specific |
+| 6 | universe collection test (ETF holdings → raw_universe) | ✅ | project-specific |
+| 7 | price sample data collection test (Alpha Vantage) | ✅ | project-specific |
+| 8 | FRED API sample data collection test | ✅ | project-specific |
 
 ---
 
@@ -33,13 +33,13 @@ Implement Python modules to collect financial data from external APIs. **univers
 ### 1. universe_collector.py
 
 #### Purpose
-Collect S&P 500 + Nasdaq-100 constituents from ETF holdings (**IVV** = S&P 500, **QQQ** = Nasdaq-100) and produce the `raw_universe` constituent list. **Runs before yfinance_collector** — its ticker list is the collection target for yfinance, so index add/drop and delistings are picked up every run.
+Collect S&P 500 + Nasdaq-100 constituents from ETF holdings (**IVV** = S&P 500, **QQQ** = Nasdaq-100) and produce the `raw_universe` constituent list. **Runs before price_collector** — its ticker list is the collection target for the price collector, so index add/drop and delistings are picked up every run.
 
 #### Implementation Spec
 - **Input**: universe config from `symbols.yaml` (source + ETF codes); no date range needed
 - **Output**: pandas DataFrame with columns: `ticker, company_name, sector, market, index_source, weight, source` → `raw_universe`
 - **Source field**: `"IVV"` / `"QQQ"` (issuing ETF)
-- **Source (pluggable)**: `etf_holdings` (default — issuer-disclosed CSV) / `api` (FMP·Finnhub) / `wikipedia`
+- **Source (pluggable)**: `wikipedia` (default — constituent tables, no key) / `etf_holdings` (issuer CSV) / `api` (FMP·Finnhub)
 - **Cache fallback**: on collection failure, keep the previous successful `raw_universe` (no TRUNCATE) — index membership changes only quarterly, so a day-old list is safe
 - **Error handling**: log failure, fall back to cache, continue pipeline (FR-010)
 
@@ -48,7 +48,7 @@ Collect S&P 500 + Nasdaq-100 constituents from ETF holdings (**IVV** = S&P 500, 
 def fetch_universe(config) -> pd.DataFrame
 ```
 
-### 2. yfinance_collector.py
+### 2. price_collector.py
 
 #### Purpose
 Collect daily OHLCV data for the US stocks in the `raw_universe` ticker list (produced by universe_collector).
@@ -56,13 +56,13 @@ Collect daily OHLCV data for the US stocks in the `raw_universe` ticker list (pr
 #### Implementation Spec
 - **Input**: Ticker list from `raw_universe` (collected by universe_collector — **not** individual tickers listed in `symbols.yaml`), date range
 - **Output**: pandas DataFrame with columns: `symbol, date, open, high, low, close, adj_close, volume, source`
-- **Source field**: `"yfinance"`
-- **API**: yfinance (unofficial, no rate limit)
+- **Source field**: `"alphavantage"` / `"yfinance"` (per source)
+- **Source (pluggable)**: `alphavantage` (default — TIME_SERIES_DAILY, free key; 5/min·25/day limit → `max_symbols` caps tickers) / `yfinance` (full, no key)
 - **Error handling**: Try-except per ticker, log failures, continue to next ticker (FR-010)
 
 #### Key Functions
 ```python
-def collect_stock_data(symbols: list, start_date: str, end_date: str) -> pd.DataFrame
+def collect_stock_data(symbols, start_date=None, end_date=None, source=None) -> pd.DataFrame
 ```
 
 ### 3. fred_collector.py
@@ -90,7 +90,7 @@ Record collection stage results: success/failure/record count per API call (FR-0
 
 #### Log Format
 ```
-[2026-05-12 10:30:00] [collect] [success] yfinance — AAPL: 1,260 records
+[2026-05-12 10:30:00] [collect] [success] alphavantage — AAPL: 100 records
 [2026-05-12 10:30:05] [collect] [failure] FRED — INVALID_CODE: API error 400
 ```
 
@@ -110,7 +110,7 @@ Record collection stage results: success/failure/record count per API call (FR-0
 ## Prerequisites & Dependencies
 
 - Phase 1 completed (config.py, logger.py working)
-- `yfinance` package installed
+- Alpha Vantage API key in `.env` (default price source)
 - `fredapi` package installed
 - FRED API key in `.env`
 - `config/symbols.yaml` with universe source config and indicator list (no individual ticker list)
@@ -119,7 +119,7 @@ Record collection stage results: success/failure/record count per API call (FR-0
 
 ## Development Notes
 
-- yfinance is unofficial — API may change without notice
+- Alpha Vantage free tier: 5 req/min, 25 req/day → `max_symbols` caps tickers per run; yfinance (optional) is unofficial and may change
 - FRED rate limit: 120 requests/min — with ~10 indicators this is not a concern
 - `collected_at` timestamp is added automatically for raw data tracking
 - Test with 2-3 tickers first before running full symbol list
@@ -131,23 +131,24 @@ Record collection stage results: success/failure/record count per API call (FR-0
 | Date | Description |
 |---|---|
 | 2026-05-12 | Initial creation |
-| 2026-07-06 | Added dynamic universe: `universe_collector.py` (ETF holdings IVV+QQQ → `raw_universe`, runs before yfinance); yfinance now collects the `raw_universe` ticker list |
+| 2026-07-06 | Added dynamic universe: `universe_collector.py` (ETF holdings IVV+QQQ → `raw_universe`, runs before the price collector); the price collector now collects the `raw_universe` ticker list |
+| 2026-07-07 | ✅ Phase 2 completed — implemented as `price_collector.py` (pluggable: Alpha Vantage default / yfinance) and `universe_collector.py` (pluggable: Wikipedia default / etf_holdings); `max_symbols` caps tickers for the Alpha Vantage free tier |
 
 ---
 ---
 
-# Phase 2 — 데이터 수집 `🔲 미시작`
+# Phase 2 — 데이터 수집 `✅ 완료`
 
-> yfinance(미국 주가)와 FRED API(경제지표) 데이터 수집 모듈 구축
+> 미국 주가와 FRED API(경제지표) 데이터 수집 모듈 구축
 
-**상태**: 🔲 미시작
+**상태**: ✅ 완료
 **선행 조건**: Phase 1 완료 (환경 설정, BigQuery 연결 확인)
 
 ---
 
 ## 개요
 
-외부 API에서 금융 데이터를 수집하는 Python 모듈을 구현한다. **universe_collector가 가장 먼저 실행되어 매 실행마다 ETF 보유종목(IVV + QQQ)에서 S&P 500 + Nasdaq-100 구성종목 명단을 수집하므로 지수 편출입·상장폐지가 자동 반영된다.** 이어서 yfinance로 미국 주식 일별 OHLCV 데이터를, FRED API로 경제지표(금리, 인플레이션 등)를 수집한다. 파이프라인 로거가 각 단계의 성공/실패/건수를 기록한다.
+외부 API에서 금융 데이터를 수집하는 Python 모듈을 구현한다. **universe_collector가 가장 먼저 실행되어 매 실행마다 S&P 500 + Nasdaq-100 구성종목 명단을 수집하므로(소스 교체 가능 — 기본 Wikipedia) 지수 편출입·상장폐지가 자동 반영된다.** 이어서 Alpha Vantage로 미국 주식 일별 OHLCV 데이터를(소스 교체 가능, yfinance 옵션), FRED API로 경제지표(금리, 인플레이션 등)를 수집한다. 파이프라인 로거가 각 단계의 성공/실패/건수를 기록한다.
 
 ---
 
@@ -155,14 +156,14 @@ Record collection stage results: success/failure/record count per API call (FR-0
 
 | # | 모듈 | 상태 | 타입 |
 |---|---|---|---|
-| 1 | `src/collectors/universe_collector.py` | 🔲 | project-specific |
-| 2 | `src/collectors/yfinance_collector.py` | 🔲 | project-specific |
-| 3 | `src/collectors/fred_collector.py` | 🔲 | project-specific |
-| 4 | `src/collectors/__init__.py` | 🔲 | project-specific |
-| 5 | 파이프라인 실행 로그 연동 | 🔲 | project-specific |
-| 6 | 유니버스 수집 테스트 (ETF 보유종목 → raw_universe) | 🔲 | project-specific |
-| 7 | yfinance 샘플 데이터 수집 테스트 | 🔲 | project-specific |
-| 8 | FRED API 샘플 데이터 수집 테스트 | 🔲 | project-specific |
+| 1 | `src/collectors/universe_collector.py` | ✅ | project-specific |
+| 2 | `src/collectors/price_collector.py` | ✅ | project-specific |
+| 3 | `src/collectors/fred_collector.py` | ✅ | project-specific |
+| 4 | `src/collectors/__init__.py` | ✅ | project-specific |
+| 5 | 파이프라인 실행 로그 연동 | ✅ | project-specific |
+| 6 | 유니버스 수집 테스트 (ETF 보유종목 → raw_universe) | ✅ | project-specific |
+| 7 | 주가 샘플 데이터 수집 테스트 (Alpha Vantage) | ✅ | project-specific |
+| 8 | FRED API 샘플 데이터 수집 테스트 | ✅ | project-specific |
 
 ---
 
@@ -171,13 +172,13 @@ Record collection stage results: success/failure/record count per API call (FR-0
 ### 1. universe_collector.py
 
 #### 목적
-ETF 보유종목(**IVV** = S&P 500, **QQQ** = Nasdaq-100)에서 S&P 500 + Nasdaq-100 구성종목을 수집해 `raw_universe` 구성종목 명단을 산출한다. **yfinance_collector보다 먼저 실행** — 여기서 나온 ticker 목록이 yfinance의 수집 대상이 되므로, 매 실행마다 지수 편출입·상장폐지가 반영된다.
+ETF 보유종목(**IVV** = S&P 500, **QQQ** = Nasdaq-100)에서 S&P 500 + Nasdaq-100 구성종목을 수집해 `raw_universe` 구성종목 명단을 산출한다. **price_collector보다 먼저 실행** — 여기서 나온 ticker 목록이 주가 수집 대상이 되므로, 매 실행마다 지수 편출입·상장폐지가 반영된다.
 
 #### 구현 명세
 - **입력**: `symbols.yaml`의 유니버스 설정(소스 + ETF 코드). 날짜 범위 불필요
 - **출력**: pandas DataFrame — 컬럼: `ticker, company_name, sector, market, index_source, weight, source` → `raw_universe`
 - **source 필드**: `"IVV"` / `"QQQ"` (출처 ETF)
-- **소스(pluggable)**: `etf_holdings`(기본 — 운용사 공시 CSV) / `api`(FMP·Finnhub) / `wikipedia`
+- **소스(pluggable)**: `wikipedia`(기본 — 구성종목 표, 키 불필요) / `etf_holdings`(운용사 공시 CSV) / `api`(FMP·Finnhub)
 - **캐시 폴백**: 수집 실패 시 직전 성공 `raw_universe`를 유지(TRUNCATE 안 함) — 지수 멤버십은 분기 단위로만 바뀌므로 하루 지난 목록도 안전
 - **에러 처리**: 실패 로그 기록 후 캐시 폴백, 파이프라인 계속 (FR-010)
 
@@ -186,7 +187,7 @@ ETF 보유종목(**IVV** = S&P 500, **QQQ** = Nasdaq-100)에서 S&P 500 + Nasdaq
 def fetch_universe(config) -> pd.DataFrame
 ```
 
-### 2. yfinance_collector.py
+### 2. price_collector.py
 
 #### 목적
 `raw_universe`의 ticker 목록(universe_collector가 산출)에 있는 미국 주식의 일별 OHLCV 데이터를 수집한다.
@@ -194,13 +195,13 @@ def fetch_universe(config) -> pd.DataFrame
 #### 구현 명세
 - **입력**: `raw_universe`의 ticker 목록(universe_collector가 수집 — `symbols.yaml`에 개별 종목을 나열하는 게 **아님**), 날짜 범위
 - **출력**: pandas DataFrame — 컬럼: `symbol, date, open, high, low, close, adj_close, volume, source`
-- **source 필드**: `"yfinance"`
-- **API**: yfinance (비공식, 요청 제한 없음)
+- **source 필드**: `"alphavantage"` / `"yfinance"` (소스별)
+- **소스(pluggable)**: `alphavantage`(기본 — TIME_SERIES_DAILY, 무료 키; 5회/분·25회/일 → `max_symbols`로 종목 수 제한) / `yfinance`(전체, 키 불필요)
 - **에러 처리**: 종목별 try-except, 실패 시 로그 기록 후 다음 종목 계속 (FR-010)
 
 #### 핵심 함수
 ```python
-def collect_stock_data(symbols: list, start_date: str, end_date: str) -> pd.DataFrame
+def collect_stock_data(symbols, start_date=None, end_date=None, source=None) -> pd.DataFrame
 ```
 
 ### 3. fred_collector.py
@@ -228,7 +229,7 @@ def collect_economic_data(indicators: list, start_date: str, end_date: str) -> p
 
 #### 로그 형식
 ```
-[2026-05-12 10:30:00] [collect] [success] yfinance — AAPL: 1,260건
+[2026-05-12 10:30:00] [collect] [success] alphavantage — AAPL: 100건
 [2026-05-12 10:30:05] [collect] [failure] FRED — INVALID_CODE: API error 400
 ```
 
@@ -248,7 +249,7 @@ def collect_economic_data(indicators: list, start_date: str, end_date: str) -> p
 ## 선행 조건 및 의존성
 
 - Phase 1 완료 (config.py, logger.py 동작 확인)
-- `yfinance` 패키지 설치
+- `.env`에 Alpha Vantage API 키 (기본 주가 소스)
 - `fredapi` 패키지 설치
 - `.env`에 FRED API 키 설정
 - `config/symbols.yaml`에 유니버스 소스 설정 + 지표 목록 작성 (개별 종목 나열 없음)
@@ -257,7 +258,7 @@ def collect_economic_data(indicators: list, start_date: str, end_date: str) -> p
 
 ## 개발 시 주의사항
 
-- yfinance는 비공식 API — 예고 없이 변경될 수 있음
+- Alpha Vantage 무료 한도: 5회/분·25회/일 → `max_symbols`로 종목 수 제한; yfinance(옵션)는 비공식이라 변경될 수 있음
 - FRED 요청 제한: 120회/분 — 지표 ~10개 수준에서는 문제 없음
 - `collected_at` 타임스탬프는 raw 데이터 추적용으로 자동 추가
 - 전체 종목 실행 전 2~3개 종목으로 먼저 테스트
@@ -269,4 +270,5 @@ def collect_economic_data(indicators: list, start_date: str, end_date: str) -> p
 | 날짜 | 내용 |
 |---|---|
 | 2026-05-12 | 최초 작성 |
-| 2026-07-06 | 동적 유니버스 추가: `universe_collector.py`(ETF 보유종목 IVV+QQQ → `raw_universe`, yfinance보다 먼저 실행); yfinance 수집 대상을 `raw_universe`의 ticker 목록으로 변경 |
+| 2026-07-06 | 동적 유니버스 추가: `universe_collector.py`(ETF 보유종목 IVV+QQQ → `raw_universe`, 주가 수집보다 먼저 실행); 주가 수집 대상을 `raw_universe`의 ticker 목록으로 변경 |
+| 2026-07-07 | ✅ Phase 2 완료 — `price_collector.py`(pluggable: Alpha Vantage 기본 / yfinance)와 `universe_collector.py`(pluggable: Wikipedia 기본 / etf_holdings)로 구현; Alpha Vantage 무료 한도 대비 `max_symbols`로 종목 수 제한 |

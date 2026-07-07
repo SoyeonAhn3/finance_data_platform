@@ -124,7 +124,7 @@ Write execution and quality logs to BigQuery operations tables after each batch 
 | Date | Description |
 |---|---|
 | 2026-05-12 | Initial creation |
-| 2026-07-06 | Revised for Snowflake → BigQuery migration (WRITE_TRUNCATE load job, google-cloud-bigquery connector) |
+| 2026-07-06 | Aligned to BigQuery (WRITE_TRUNCATE load job, google-cloud-bigquery connector) |
 | 2026-07-06 | Dynamic universe reflected: raw columns load as nullable (not REQUIRED), loader also WRITE_TRUNCATEs `raw_universe` (cache fallback on universe-collection failure), added `completeness` check (approved-but-0-rows → suspected delisting, IR-008/FR-009); `data_quality_log.check_type` now includes completeness/universe |
 | 2026-07-07 | ✅ Phase 3 completed — bigquery_loader (WRITE_TRUNCATE load job; loader sets `collected_at` since load replaces schema; count check NFR-008), quality_checker (missing/outlier/duplicate/completeness), operations_logger (execution/quality logs to BigQuery via WRITE_APPEND, Python UUIDs), main.py wired collect→validate→load→ops-log |
 
@@ -257,6 +257,6 @@ def run_all_checks(df: pd.DataFrame, table_name: str) -> list
 | 날짜 | 내용 |
 |---|---|
 | 2026-05-12 | 최초 작성 |
-| 2026-07-06 | Snowflake → BigQuery 전환 반영 (WRITE_TRUNCATE load job, google-cloud-bigquery 커넥터) |
+| 2026-07-06 | BigQuery 기준 정비 (WRITE_TRUNCATE load job, google-cloud-bigquery 커넥터) |
 | 2026-07-06 | 동적 유니버스 반영: raw 컬럼 nullable 적재(REQUIRED 아님), 로더가 `raw_universe`도 WRITE_TRUNCATE(유니버스 수집 실패 시 캐시 폴백), `completeness` 검증 추가(승인 종목 0건 → 상폐 의심, IR-008/FR-009); `data_quality_log.check_type`에 completeness/universe 포함 |
 | 2026-07-07 | ✅ Phase 3 완료 — bigquery_loader(WRITE_TRUNCATE load job; 적재 시 스키마가 재정의되므로 로더가 `collected_at`을 채움; 건수 체크 NFR-008), quality_checker(결측/이상치/중복/완전성), operations_logger(실행/품질 로그 WRITE_APPEND 적재, Python UUID), main.py 수집→검증→적재→운영로그 배선 |

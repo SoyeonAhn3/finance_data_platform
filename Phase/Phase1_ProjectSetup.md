@@ -154,7 +154,7 @@ Structured logging with timestamp, stage, status, record count (NFR-004).
 | Date | Description |
 |---|---|
 | 2026-05-12 | Initial creation |
-| 2026-07-06 | Revised for Snowflake → BigQuery migration |
+| 2026-07-06 | Aligned to BigQuery (types, WRITE_TRUNCATE, FARM_FINGERPRINT keys) |
 | 2026-07-06 | Reflected dynamic universe: added `raw_universe`, nullable raw columns, `config/symbols.yaml` universe-source structure, config.py universe load |
 | 2026-07-06 | Removed `sql/seed_dimensions.sql` — dims are populated from `raw_universe` / `config/symbols.yaml` / date generation |
 | 2026-07-07 | ✅ Phase 1 completed — all deliverables implemented (config.py, logger.py, bq_client.py, setup.sql, symbols.yaml, requirements.txt, main.py skeleton, tests/test_setup.py); BigQuery connection test passed; 10 tables created in `finance_db`; FRED key validated (FEDFUNDS fetch) |
@@ -318,7 +318,7 @@ settings:
 | 날짜 | 내용 |
 |---|---|
 | 2026-05-12 | 최초 작성 |
-| 2026-07-06 | Snowflake → BigQuery 전환 반영 |
+| 2026-07-06 | BigQuery 기준 정비 (타입, WRITE_TRUNCATE, FARM_FINGERPRINT 키) |
 | 2026-07-06 | 동적 유니버스 반영: `raw_universe` 추가, raw 컬럼 nullable화, `config/symbols.yaml` 유니버스 소스 구조, config.py 유니버스 로드 |
 | 2026-07-06 | `sql/seed_dimensions.sql` 제거 — dim은 `raw_universe`/`config/symbols.yaml`/날짜 생성으로 채워짐 |
 | 2026-07-07 | ✅ Phase 1 완료 — 산출물 전부 구현(config.py, logger.py, bq_client.py, setup.sql, symbols.yaml, requirements.txt, main.py 스켈레톤, tests/test_setup.py); BigQuery 연결 테스트 통과; `finance_db`에 테이블 10개 생성; FRED 키 유효성 확인(FEDFUNDS fetch) |

@@ -452,7 +452,7 @@ last_skill: design-impl-spec
 | 레이어 | 선택 기술 | 비교 대안 | 선택 이유 |
 |---|---|---|---|
 | 데이터 수집 | Python (yfinance, fredapi, requests) | Node.js, Go | 금융 데이터 API 라이브러리가 Python에 집중 (yfinance, fredapi 등), 초중급 학습 접근성 우수 |
-| 데이터 웨어하우스 | BigQuery | Snowflake, PostgreSQL | 서버리스 클라우드 DW, 영구 무료티어(월 1TB 쿼리 + 10GB 저장)로 크레딧 만료 없이 학습 가능, GCP 생태계·GitHub Actions 궁합, Star Schema + Mart View 네이티브 지원 |
+| 데이터 웨어하우스 | BigQuery | PostgreSQL, Redshift | 서버리스 클라우드 DW, 영구 무료티어(월 1TB 쿼리 + 10GB 저장)로 비용 부담 없이 학습 지속 가능, GCP 생태계·GitHub Actions 궁합, Star Schema + Mart View 네이티브 지원 |
 | 데이터 모델링 | Star Schema (Fact/Dim) | 3NF, Data Vault | 분석 최적화 표준 패턴, BI 도구와 궁합 우수, 초중급에서 학습 가치 가장 높은 패턴 |
 | 시각화 | Power BI Desktop | Tableau, Metabase, Superset | BigQuery 네이티브 커넥터, 무료 Desktop 버전 사용 가능, 대시보드 업계 표준 |
 | 오케스트레이션 | Python 스크립트 (main.py) | Airflow, Prefect, Dagster | 학습용에 오케스트레이터 과도 (제약사항: 초중급 수준), 일 1회 배치에 script로 충분 |
@@ -509,9 +509,9 @@ last_skill: design-impl-spec
 #### ADR-004: BigQuery 채택
 
 **상태**: 채택
-**맥락**: 데이터 웨어하우스 재선택 (Snowflake → BigQuery). Snowflake 무료 트라이얼은 크레딧이 30일 후 만료되어 학습 지속에 압박
+**맥락**: 데이터 웨어하우스 선택. 학습용이라 비용·크레딧 만료 압박 없이 지속 가능한 플랫폼이 필요
 **결정**: BigQuery를 데이터 웨어하우스로 채택
-**근거**: 영구 무료티어(월 1TB 쿼리 + 10GB 저장)로 크레딧 만료 압박이 없음, 서버리스라 warehouse(컴퓨트) 관리가 불필요, GCP 생태계 및 GitHub Actions와의 궁합이 좋음, Power BI 네이티브 커넥터 지원
+**근거**: 영구 무료티어(월 1TB 쿼리 + 10GB 저장)로 비용·크레딧 만료 압박이 없음, 서버리스라 컴퓨트 관리가 불필요, GCP 생태계 및 GitHub Actions와의 궁합이 좋음, Power BI 네이티브 커넥터 지원
 **결과**: 서버리스로 운영 부담 최소화, 무료티어 한도 내에서 학습 지속 가능
 
 #### ADR-005: FARM_FINGERPRINT 대리키
@@ -956,5 +956,5 @@ settings:
 | 2026-05-12 | 섹션 12 | AI 워크플로우 최초 작성 (AI I/O 2개, 프롬프트 2개, 모델 2개) | design-ai-workflow |
 | 2026-05-12 | 섹션 13 | 구현 명세 최초 작성 (프로젝트 구조 + 환경 설정) | design-impl-spec |
 | 2026-05-12 | 섹션 1,4,9,10,11 | 교차 정합성 수정 8건 (NFR-001 범위, 핵심 기능 행 분리, 결과 형태 MVP/v2 분리, KPI#5 범위 외, 사용자 흐름 진입점, 실패 시나리오 재시도, Logger 저장소 명확화, raw 보관 정책) | 수동 점검 |
-| 2026-07-06 | 전체 | Snowflake→BigQuery 전환: 플랫폼/대리키(FARM_FINGERPRINT)/적재(WRITE_TRUNCATE)/GitHub Actions 스케줄링/타입·제약 반영, ADR-004~006 추가·ADR-003 갱신 | 수동 개정 |
+| 2026-07-06 | 전체 | BigQuery 기준 정비: 플랫폼/대리키(FARM_FINGERPRINT)/적재(WRITE_TRUNCATE)/GitHub Actions 스케줄링/타입·제약 반영, ADR-004~006 추가·ADR-003 갱신 | 수동 개정 |
 | 2026-07-06 | 섹션 1,2,3,9,10,11,13 | 동적 유니버스(S&P500+Nasdaq100, ETF 보유종목 IVV/QQQ) 도입 — `raw_universe`/`universe_collector` 추가, `dim_symbol` 소스 변경(→raw_universe), raw 컬럼 nullable, `symbols.yaml` 구조, IR-008(완전성), ADR-007 | 수동 개정 |

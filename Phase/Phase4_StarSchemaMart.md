@@ -61,7 +61,7 @@ def create_mart_views(client: bigquery.Client) -> dict
 - **Grain**: One row per (date, indicator)
 
 #### dim_date
-- **Source**: `GENERATE_DATE_ARRAY('2020-01-01', CURRENT_DATE())` + `UNNEST` (BigQuery; replaces Snowflake GENERATOR/recursive CTE)
+- **Source**: `GENERATE_DATE_ARRAY('2020-01-01', CURRENT_DATE())` + `UNNEST` (BigQuery)
 - **Key**: `date_key` = `CAST(FORMAT_DATE('%Y%m%d', d) AS INT64)` (YYYYMMDD integer)
 - **Fields**: year, quarter, month, day_of_week, is_trading_day
 
@@ -128,7 +128,7 @@ def create_mart_views(client: bigquery.Client) -> dict
 | Date | Description |
 |---|---|
 | 2026-05-12 | Initial creation |
-| 2026-07-06 | Revised for Snowflake → BigQuery migration (FARM_FINGERPRINT surrogate keys, QUALIFY dedup, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
+| 2026-07-06 | Aligned to BigQuery (FARM_FINGERPRINT surrogate keys, QUALIFY dedup, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
 | 2026-07-06 | Dynamic universe: `dim_symbol` now sourced from `raw_universe` (S&P 500 + Nasdaq-100 constituents) instead of `raw_daily_price` distinct symbols, and `dim_indicator` from the `config/symbols.yaml` `indicators` seed — so the fact inner JOIN genuinely filters out-of-roster symbols, nulls, and typos |
 | 2026-07-06 | Removed `sql/seed_dimensions.sql` — dims are populated from `raw_universe` / `config/symbols.yaml` `indicators` / date generation |
 
@@ -198,7 +198,7 @@ def create_mart_views(client: bigquery.Client) -> dict
 - **단위**: (날짜, 지표)당 1행
 
 #### dim_date
-- **소스**: `GENERATE_DATE_ARRAY('2020-01-01', CURRENT_DATE())` + `UNNEST` (BigQuery; Snowflake GENERATOR/재귀 CTE 대체)
+- **소스**: `GENERATE_DATE_ARRAY('2020-01-01', CURRENT_DATE())` + `UNNEST` (BigQuery)
 - **키**: `date_key` = `CAST(FORMAT_DATE('%Y%m%d', d) AS INT64)` (YYYYMMDD 정수)
 - **필드**: year, quarter, month, day_of_week, is_trading_day
 
@@ -265,6 +265,6 @@ def create_mart_views(client: bigquery.Client) -> dict
 | 날짜 | 내용 |
 |---|---|
 | 2026-05-12 | 최초 작성 |
-| 2026-07-06 | Snowflake → BigQuery 전환 반영 (FARM_FINGERPRINT 대리키, QUALIFY 중복 제거, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
+| 2026-07-06 | BigQuery 기준 정비 (FARM_FINGERPRINT 대리키, QUALIFY 중복 제거, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
 | 2026-07-06 | 동적 유니버스 반영: `dim_symbol` 소스를 `raw_daily_price` 고유 종목 → `raw_universe`(S&P500+Nasdaq100 구성종목)로, `dim_indicator` 소스를 `config/symbols.yaml`의 `indicators` seed로 변경 — fact의 inner JOIN이 명단 밖 종목·null·오타를 실제로 걸러냄 |
 | 2026-07-06 | `sql/seed_dimensions.sql` 제거 — dim은 `raw_universe`/`config/symbols.yaml` `indicators`/날짜 생성으로 채워짐 |
