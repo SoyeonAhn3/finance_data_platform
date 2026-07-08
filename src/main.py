@@ -1,6 +1,6 @@
 """파이프라인 진입점 (오케스트레이터).
 
-흐름:  유니버스 → 수집(주가·지표) → 검증 → 적재(BigQuery raw) → [변환: Phase 4]
+흐름:  유니버스 → 수집(주가·지표) → 검증 → 적재(BigQuery raw) → 변환(Star Schema/Mart)
 각 단계 실행 로그와 품질 검증 결과를 BigQuery 운영 테이블에 기록한다.
 
 실행:
@@ -19,8 +19,9 @@ from src.loaders.operations_logger import (
     write_execution_logs,
     write_quality_logs,
 )
+from src.transformers.star_schema import transform_to_star_schema
 from src.utils import config
-from src.utils.bq_client import test_connection
+from src.utils.bq_client import get_bigquery_client, test_connection
 from src.utils.logger import get_logger, log_stage
 from src.validators.quality_checker import run_all_checks
 
@@ -77,12 +78,19 @@ def run() -> None:
         res = load_to_bigquery(df, table)
         record("load", res["status"], res["rows"], start=t)
 
-    # 5) 운영 로그 기록 (실행 + 품질)
+    # 5) Star Schema 변환 (raw → dim/fact → mart view)
+    t = _now()
+    try:
+        counts = transform_to_star_schema(get_bigquery_client())
+        n = int(counts.get("fact_daily_price", 0)) + int(counts.get("fact_economic_indicator", 0))
+        record("transform", "success", n, start=t)
+    except Exception as exc:  # noqa: BLE001 — 변환 실패해도 로그 남기고 파이프라인 마무리
+        log_stage(logger, "transform", "failure", message=str(exc))
+        record("transform", "failure", 0, error=str(exc), start=t)
+
+    # 6) 운영 로그 기록 (실행 + 품질)
     write_execution_logs(execution_id, exec_records)
     write_quality_logs(execution_id, quality_results)
-
-    # 6) Star Schema 변환 — Phase 4 에서 구현
-    log_stage(logger, "transform", "warning", message="아직 미구현 (Phase 4 예정)")
 
     logger.info("파이프라인 종료 (execution_id=%s) — universe=%d, price=%d, econ=%d행",
                 execution_id, len(universe_df), len(price_df), len(econ_df))

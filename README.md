@@ -197,8 +197,9 @@ finance_data_platform/
 | Phase 1 — Project Setup | ✅ Completed | Environment config, BigQuery schema init, utility modules |
 | Phase 2 — Data Collection | ✅ Completed | Universe (Wikipedia) + price (Alpha Vantage) + FRED collectors |
 | Phase 3 — Data Loading & Validation | ✅ Completed | BigQuery loader + quality checker + ops logs |
-| Phase 4 — Star Schema & Mart | 🔲 Not Started | Fact/Dim tables + 3 Mart Views |
+| Phase 4 — Star Schema & Mart | ✅ Completed | Fact/Dim tables + 3 Mart Views |
 | Phase 5 — Power BI Dashboard | 🔲 Not Started | KPI charts with filters |
+| Phase 6 — Scheduling | 🔲 Not Started | Automated pipeline runs via GitHub Actions cron |
 
 ---
 

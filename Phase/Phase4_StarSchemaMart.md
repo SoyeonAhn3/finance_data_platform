@@ -1,8 +1,8 @@
-# Phase 4 — Star Schema & Mart `🔲 Not Started`
+# Phase 4 — Star Schema & Mart `✅ Completed`
 
 > Transform raw data into Star Schema (Fact/Dim) and create Mart Views for analysis
 
-**Status**: 🔲 Not Started
+**Status**: ✅ Completed
 **Prerequisites**: Phase 3 completion (raw_data loaded in BigQuery)
 
 ---
@@ -17,11 +17,11 @@ Transform raw_data into a Star Schema model inside BigQuery using BigQuery Stand
 
 | # | Module | Status | Type |
 |---|---|---|---|
-| 1 | `src/transformers/star_schema.py` | 🔲 | project-specific |
-| 2 | `src/transformers/__init__.py` | 🔲 | project-specific |
-| 3 | `sql/mart_views.sql` | 🔲 | project-specific |
-| 4 | Fact table transformation verification | 🔲 | project-specific |
-| 5 | Mart View query verification | 🔲 | project-specific |
+| 1 | `src/transformers/star_schema.py` | ✅ | project-specific |
+| 2 | `src/transformers/__init__.py` | ✅ | project-specific |
+| 3 | `sql/mart_views.sql` | ✅ | project-specific |
+| 4 | Fact table transformation verification | ✅ | project-specific |
+| 5 | Mart View query verification | ✅ | project-specific |
 
 ---
 
@@ -78,6 +78,8 @@ def create_mart_views(client: bigquery.Client) -> dict
 
 ### 3. Mart Views
 
+> **Price basis**: all views use `COALESCE(adj_close, close_price)` — when the adjusted close is NULL (Alpha Vantage free tier does not provide it) the raw close is used, so returns/volatility/correlation still compute. `adj_close` is kept faithful (nullable) in the Fact; the fallback lives only in the Mart layer.
+
 #### mart_performance
 - **Base**: `fact_daily_price` + `dim_symbol` + `dim_date`
 - **Calculations**: `LAG()` for daily/weekly/monthly returns, cumulative return
@@ -131,15 +133,16 @@ def create_mart_views(client: bigquery.Client) -> dict
 | 2026-07-06 | Aligned to BigQuery (FARM_FINGERPRINT surrogate keys, QUALIFY dedup, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
 | 2026-07-06 | Dynamic universe: `dim_symbol` now sourced from `raw_universe` (S&P 500 + Nasdaq-100 constituents) instead of `raw_daily_price` distinct symbols, and `dim_indicator` from the `config/symbols.yaml` `indicators` seed — so the fact inner JOIN genuinely filters out-of-roster symbols, nulls, and typos |
 | 2026-07-06 | Removed `sql/seed_dimensions.sql` — dims are populated from `raw_universe` / `config/symbols.yaml` `indicators` / date generation |
+| 2026-07-08 | **Implemented — Phase 4 complete.** Added `src/transformers/star_schema.py` + `sql/mart_views.sql`, wired the transform stage into `src/main.py`. Verified end-to-end on BigQuery: dim_date 2381, dim_symbol 517, dim_indicator 2, fact_daily_price 1900, fact_economic_indicator 154, 3 mart views. Mart views use `COALESCE(adj_close, close_price)` so metrics still compute when `adj_close` is NULL. `dim_indicator` built from `config/symbols.yaml` seed via `WITH OFFSET` array params. |
 
 ---
 ---
 
-# Phase 4 — Star Schema & Mart `🔲 미시작`
+# Phase 4 — Star Schema & Mart `✅ 완료`
 
 > raw 데이터를 Star Schema(Fact/Dim)로 변환하고 분석용 Mart View 생성
 
-**상태**: 🔲 미시작
+**상태**: ✅ 완료
 **선행 조건**: Phase 3 완료 (BigQuery에 raw_data 적재 완료)
 
 ---
@@ -154,11 +157,11 @@ BigQuery 내부에서 BigQuery Standard SQL로 raw_data를 Star Schema 모델로
 
 | # | 모듈 | 상태 | 타입 |
 |---|---|---|---|
-| 1 | `src/transformers/star_schema.py` | 🔲 | project-specific |
-| 2 | `src/transformers/__init__.py` | 🔲 | project-specific |
-| 3 | `sql/mart_views.sql` | 🔲 | project-specific |
-| 4 | Fact 테이블 변환 검증 | 🔲 | project-specific |
-| 5 | Mart View 쿼리 검증 | 🔲 | project-specific |
+| 1 | `src/transformers/star_schema.py` | ✅ | project-specific |
+| 2 | `src/transformers/__init__.py` | ✅ | project-specific |
+| 3 | `sql/mart_views.sql` | ✅ | project-specific |
+| 4 | Fact 테이블 변환 검증 | ✅ | project-specific |
+| 5 | Mart View 쿼리 검증 | ✅ | project-specific |
 
 ---
 
@@ -215,6 +218,8 @@ def create_mart_views(client: bigquery.Client) -> dict
 
 ### 3. Mart View
 
+> **가격 기준**: 모든 뷰는 `COALESCE(adj_close, close_price)` 사용 — 수정종가가 NULL(Alpha Vantage 무료 티어 미제공)이면 종가로 대체하여 수익률·변동성·상관계수가 계속 계산된다. Fact 는 `adj_close` 를 원본 그대로(nullable) 두고, 폴백은 Mart 계층에만 둔다.
+
 #### mart_performance
 - **기반**: `fact_daily_price` + `dim_symbol` + `dim_date`
 - **계산**: `LAG()`로 일간/주간/월간 수익률, 누적 수익률
@@ -268,3 +273,4 @@ def create_mart_views(client: bigquery.Client) -> dict
 | 2026-07-06 | BigQuery 기준 정비 (FARM_FINGERPRINT 대리키, QUALIFY 중복 제거, GENERATE_DATE_ARRAY dim_date, BigQuery Standard SQL / `bigquery.Client`) |
 | 2026-07-06 | 동적 유니버스 반영: `dim_symbol` 소스를 `raw_daily_price` 고유 종목 → `raw_universe`(S&P500+Nasdaq100 구성종목)로, `dim_indicator` 소스를 `config/symbols.yaml`의 `indicators` seed로 변경 — fact의 inner JOIN이 명단 밖 종목·null·오타를 실제로 걸러냄 |
 | 2026-07-06 | `sql/seed_dimensions.sql` 제거 — dim은 `raw_universe`/`config/symbols.yaml` `indicators`/날짜 생성으로 채워짐 |
+| 2026-07-08 | **구현 완료 — Phase 4 완료.** `src/transformers/star_schema.py` + `sql/mart_views.sql` 작성, `src/main.py` 변환 단계 연결. BigQuery 실제 검증: dim_date 2381, dim_symbol 517, dim_indicator 2, fact_daily_price 1900, fact_economic_indicator 154, mart view 3종. Mart View는 `COALESCE(adj_close, close_price)` 사용 → `adj_close`가 NULL이어도 지표 계산됨. `dim_indicator`는 `config/symbols.yaml` seed를 `WITH OFFSET` 배열 파라미터로 생성. |
